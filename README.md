@@ -1,8 +1,8 @@
 # Cloud-enabled Amplify DataStore workshop using Angular
 
-In this workshop we'll learn how to use Amplify DataStore with Angular & [AWS Amplify](https://aws-amplify.github.io/).
+In this workshop we'll learn how to use Amplify DataStore to create `Chatty` a chat app using Angular & [AWS Amplify](https://aws-amplify.github.io/).
 
-![](https://i.imgur.com/GW1Nk5B.png)
+![](./header.png)
 
 ### Topics we'll be covering:
 
@@ -29,13 +29,13 @@ If you already have it installed, skip to the next step. If not, either install 
 
 ```bash
 npm install -g @angular/cli
-ng new amplify-app
+ng new amplify-datastore
 ```
  
 Now change into the new app directory and make sure it runs
 
 ```bash
-cd amplify-app
+cd amplify-datastore
 npm install
 ng serve
 ```
@@ -77,7 +77,6 @@ Next, we'll install the AWS Amplify CLI:
 ```bash
 npm install -g @aws-amplify/cli
 ```
-> If your installation fails. Try `npm install -g @aws-amplify/cli --unsafe-perm=true`.
 > If you have issues related to fsevents with npm install. Try: `npm audit fix --force`.
 
 Now we need to configure the CLI with our credentials:
@@ -89,8 +88,8 @@ amplify configure
 > If you'd like to see a video walkthrough of this configuration process, click [here](https://www.youtube.com/watch?v=fWbM5DLh25U).
 
 Here we'll walk through the `amplify configure` setup. Once you've signed in to the AWS console, continue:
-- Specify the AWS Region: __ap-northeast-1 (Tokyo)__
-- Specify the username of the new IAM user: __amplify-app__
+- Specify the AWS Region: __eu-west-2 (London)__
+- Specify the username of the new IAM user: __amplify-datastore__
 > In the AWS Console, click __Next: Permissions__, __Next: Tags__, __Next: Review__, & __Create User__ to create the new IAM user. Then, return to the command line & press Enter.
 - Enter the access key of the newly created user:   
   accessKeyId: __(<YOUR_ACCESS_KEY_ID>)__   
@@ -105,13 +104,13 @@ Here we'll walk through the `amplify configure` setup. Once you've signed in to 
 amplify init
 ```
 
-- Enter a name for the project: __amplify-app__
+- Enter a name for the project: __amplify-datastore__
 - Enter a name for the environment: __dev__
 - Choose your default editor: __Visual Studio Code__   
 - Please choose the type of app that you're building __javascript__   
 - What javascript framework are you using __angular__   
 - Source Directory Path: __src__   
-- Distribution Directory Path: __dist/amplify-app__   
+- Distribution Directory Path: __dist/amplify-datastore__   
 - Build Command: __npm run-script build__   
 - Start Command: __ng serve__
 - Please choose the profile you want to use: __default__
@@ -121,7 +120,7 @@ amplify init
 Now, the AWS Amplify CLI has iniatilized a new project & you will see a new folder: __amplify__. The files in this folder hold your project configuration.
 
 ```bash
-<amplify-app>
+<amplify-datastore>
     |_ amplify
       |_ .config
       |_ #current-cloud-backend
@@ -274,17 +273,19 @@ amplify add api
 Answer the following questions
 
 - Please select from one of the below mentioned services __GraphQL__
-- Provide API name: __RestaurantAPI__
+- Provide API name: __ChattyAPI__
 - Choose the default authorization type for the API __API key__
 - Enter a description for the API key: __(empty)__
 - After how many days from now the API key should expire (1-365): __180__
 - Do you want to configure advanced settings for the GraphQL API __Yes, I want to make some additional changes.__
-- Choose the additional authorization types you want to configure for the API (Press &lt;space&gt; to select, &lt;a&gt; to 
-toggle all, &lt;i&gt; to invert selection) __None__
-- Do you have an annotated GraphQL schema? __No__
-- Do you want a guided schema creation? __Yes__
-- What best describes your project: __Single object with fields (e.g., “Todo” with ID, name, description)__
-- Do you want to edit the schema now? __Yes__
+- Configure additional auth types? __N__
+- Configure conflict detection? __Y__
+- Select the default resolution strategy __Auto Merge__
+- Do you want to override default per model settings? __N__
+- Do you have an annotated GraphQL schema? __N__ 
+- Do you want a guided schema creation? __Y__   
+- What best describes your project: __Single object with fields (e.g. “Todo” with ID, name, description)__   
+- Do you want to edit the schema now? __Y__
 
 > To select none just press `Enter`.
 
@@ -410,7 +411,7 @@ To do so, we need to define the query, execute the query, store the data in our 
 First, we will install the AWS Amplify API and PubSub libraries:
 
 ```bash
-npm install --save @aws-amplify/api @aws-amplify/pubsub
+npm install --save aws-amplify
 ```
 
 To configure the app, open __main.ts__ and change the initial code to configure the new dependencies:
@@ -639,11 +640,17 @@ Follow the steps [here](https://aws.amazon.com/premiumsupport/knowledge-center/c
 
 ### Trobleshooting
 
-Message: The AWS Access Key Id needs a subscription for the service
+> Message: The AWS Access Key Id needs a subscription for the service
 
 Solution: Make sure you are subscribed to the free plan. [Subscribe](https://portal.aws.amazon.com/billing/signup?type=resubscribe#/resubscribed)
 
 
-Message: TypeError: fsevents is not a constructor
+> Message: TypeError: fsevents is not a constructor
 
 Solution: `npm audit fix --force`
+
+> Message: Cannot read property 'viewContainerRef' of undefined at AuthenticatorComponent...
+
+Solution: (#4681)[https://github.com/aws-amplify/amplify-js/issues/4681]
+
+Replace package an occurrences of `aws-amplify-angular` with `@flowaccount/aws-amplify-angular`.
