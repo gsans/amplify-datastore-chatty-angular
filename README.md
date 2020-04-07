@@ -1,6 +1,6 @@
 # Cloud-enabled Amplify DataStore workshop using Angular
 
-In this workshop we'll learn how to use Amplify DataStore to create `Chatty` a chat app using Angular & [AWS Amplify](https://aws-amplify.github.io/).
+In this workshop we'll learn how to use Amplify DataStore to create `Chatty` a chat app using Angular 9 & [AWS Amplify](https://aws-amplify.github.io/).
 
 ![](./header.png)
 
@@ -8,9 +8,10 @@ In this workshop we'll learn how to use Amplify DataStore to create `Chatty` a c
 
 - [Authentication](#adding-authentication)
 - [GraphQL API with AWS AppSync](#adding-a-graphql-api)
+- [Setup Amplify DataStore](#setup-amplify-datastore)
 - [Deploying via the Amplify Console](#deploying-via-the-amplify-console)
-- [Run locally via Amplify CLI](#run-locally-with-the-amplify-cli)
 - [Removing / Deleting Services](#removing-services)
+- [Appendix and trobleshooting](#appendix)
 
 ## Pre-requisites
 
@@ -66,7 +67,7 @@ Add the following code, to the top of `src/polyfills.ts`. This is a requirement 
 Let's now install the AWS Amplify API & AWS Amplify Angular library:
 
 ```bash
-npm install --save @aws-amplify/auth aws-amplify-angular
+npm install --save aws-amplify aws-amplify-angular
 ```
 > If you have issues related to EACCESS try using sudo: `sudo npm <command>`.
 
@@ -130,6 +131,8 @@ Now, the AWS Amplify CLI has iniatilized a new project & you will see a new fold
 
 ## Adding Authentication
 
+In order to display the user sending messages for our chat, we will require users to register and login. We can implement this requirement using the `auth` category.
+
 To add authentication to our Amplify project, we can use the following command:
 
 ```sh
@@ -158,7 +161,6 @@ Current Environment: dev
 | Auth     | amplifyappuuid     | Create    | awscloudformation |
 ? Are you sure you want to continue? Yes
 ```
-
 
 To quickly check your newly created __Cognito User Pool__ you can run
 
@@ -289,18 +291,18 @@ Answer the following questions
 
 > To select none just press `Enter`.
 
-
 > When prompted, update the schema to the following:   
 
 ```graphql
-type Restaurant @model {
+type Chatty @model {
   id: ID!
-  clientId: String
-  name: String!
-  description: String!
-  city: String!
+  user: String!
+  message: String!
+  createdAt: AWSDateTime
 }
 ```
+
+This will allow us to display each user messages together with the creation date and time.
 
 > Note: Don't forget to save the changes to the schema file!
 
@@ -326,164 +328,154 @@ This step created a new AWS AppSync API. Use the command below to access the AWS
 amplify console api
 ```
 
-- Please select from one of the below mentioned services __GraphQL__
+## Setup Amplify DataStore
 
-### Local mocking and testing
+### Installing the Amplify DataStore
 
-To mock and test the API locally, you can run the `mock` command:
-
-```sh
-amplify mock api
-```
-> Note: local mocking requires Java SDK
-
-- Choose the code generation language target: __javascript__
-- Enter the file name pattern of graphql queries, mutations and subscriptions: __src/graphql/**/*.js__
-- Do you want to generate/update all possible GraphQL operations - queries, mutations and subscriptions: __Y__
-- Enter maximum statement depth [increase from default if your schema is deeply nested]: __2__
-
-This should open up the local GraphiQL editor.
-
-From here, we can now test the API locally.
-
-### Adding mutations from within the AWS AppSync Console
-
-In the AWS AppSync console, on the left side click on Queries.
-
-Execute the following mutation to create a new restaurant in the API:
-
-```graphql
-mutation createRestaurant {
-  createRestaurant(input: {
-    name: "Nobu"
-    description: "Great Sushi"
-    city: "New York"
-  }) {
-    id name description city
-  }
-}
-```
-
-Now, let's query for the restaurant:
-
-```graphql
-query listRestaurants {
-  listRestaurants {
-    items {
-      id
-      name
-      description
-      city
-    }
-  }
-}
-```
-
-We can even add search / filter capabilities when querying:
-
-```graphql
-query searchRestaurants {
-  listRestaurants(filter: {
-    city: {
-      contains: "New York"
-    }
-  }) {
-    items {
-      id
-      name
-      description
-      city
-    }
-  }
-}
-```
-
-### Interacting with the GraphQL API from our client application - Querying for data
-
-Now that the GraphQL API is created we can begin interacting with it!
-
-The first thing we'll do is perform a query to fetch data from our API. 
-
-To do so, we need to define the query, execute the query, store the data in our state, then list the items in our UI.
-
-> Read more about the __Amplify GraphQL Client__ [here](https://aws-amplify.github.io/docs/js/api#amplify-graphql-client).
-
-First, we will install the AWS Amplify API and PubSub libraries:
+Next, we'll install the necessary dependencies:
 
 ```bash
-npm install --save aws-amplify
+npm install --save @aws-amplify/core @aws-amplify/datastore
 ```
 
-To configure the app, open __main.ts__ and change the initial code to configure the new dependencies:
+### Data Model Generation
 
-```js
-import Auth from '@aws-amplify/auth';
-import API from '@aws-amplify/api';
-import PubSub from '@aws-amplify/pubsub';
-import amplify from './aws-exports';
-Auth.configure(amplify);
-API.configure(amplify);
-PubSub.configure(amplify);
+Next, we'll generate the models to access our messages from our __ChattyAPI__
+
+```bash
+amplify codegen models
 ```
 
+Now, the AWS Amplify CLI has generated the necessary data models and you will see a new folder in your source: __models__. The files in this folder hold your data model classes and schema.
+
+```bash
+<amplify-app>
+    |_ src
+      |_ models
+```
+
+### Creating a message
+
+Now that the GraphQL API and Data Models are created we can begin interacting with them!
+
+The first thing we'll do is create a new message using the generated Data Models and save.
+
 ```js
-import { APIService } from '../API.service';
-import { Restaurant } from './types/restaurant';
+import { DataStore } from "@aws-amplify/datastore";
+import { Chatty } from "./models";
+
+await DataStore.save(new Chatty({
+  user: "amplify-user",
+  message: "Hi everyone!",
+  createdAt: new Date().toISOString()
+}))
+```
+
+This will create a record locally in your browser and synchronise it in the background using the underlying GraphQL API. 
+
+### Querying data
+
+Let's now see how we can query data using Amplify DataStore. In order to query our Data Model we will use a query and a predicate to indicate that we want all records. 
+
+```js
+import { DataStore, Predicates } from "@aws-amplify/datastore";
+import { Chatty } from "./models";
+
+const messages = await DataStore.query(Chatty, Predicates.ALL);
+```
+
+This will return an array of messages that we can display in our UI.
+
+Predicates also support filters for common types like Strings, Numbers and Lists.
+
+> Find all supported filters at [Query with Predicates](https://aws-amplify.github.io/docs/js/datastore#query-with-predicates)
+
+## Creating the UI
+
+Now, let's look at how we can create the UI to create and display messages for our chat.
+
+```js
+import { DataStore, Predicates } from "@aws-amplify/datastore";
+import { Chatty } from "../../models";
 
 @Component({
   template: `
     <div>
-      <div *ngFor="let restaurant of restaurants">
-        {{ restaurant.name }}
+      <div *ngFor="let message of messages">
+        <div>{{ message.user }} - {{ moment(message.createdAt).format('YYYY-MM-DD HH:mm:ss')}})</div>
+        <div>{{ message.message }}</div>
       </div>
     </div>`
 })
 export class AppComponent implements OnInit {
-  restaurants: Array<Restaurant>;
-  constructor(public api: APIService) { }
+  messages: Array<Chatty>;
+
   ngOnInit() {
-    this.api.ListRestaurants().then(data => {
-      this.restaurants = data.items;
-    });
+    this.loadMessages();
+  }
+
+  loadMessages() {
+    DataStore.query<Chatty>(Chatty, Predicates.ALL)
+    .then(messages => {
+      this.messages = [...messages].sort((a, b) => -a.createdAt.localeCompare(b.createdAt));
+    })
   }
 }
 ```
 
-## Performing mutations
+## Creating a message
 
- Now, let's look at how we can create mutations.
+ Now, let's look at how we can create new messages.
 
 ```js
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { createRestaurant } from '../../graphql/mutations'
 
 @Component(...)
 export class HomeComponent implements OnInit {
   public createForm: FormGroup;
 
-  constructor(private fb: FormBuilder) { }
+  constructor(private fb: FormBuilder) {
+    Auth.currentAuthenticatedUser().then(cognitoUser => {
+      this.user = cognitoUser.username
+    })
+  }
 
   async ngOnInit() {
     this.createForm = this.fb.group({
-      'name': ['', Validators.required],
-      'description': ['', Validators.required],
-      'city': ['', Validators.required]
+      'message': ['', Validators.required],
     });
-    this.api.ListRestaurants().then(event => {
-      this.restaurants = event.items;
-    });
+    this.loadMessages();
   } 
   
-  public onCreate(restaurant: any) {
-    this.api.CreateRestaurant(restaurant).then(event => {
-      console.log('item created!');
+  public onCreate(message: any) {
+    if ( message.message=="" ) return;
+
+    DataStore.save(new Chatty({
+      user: this.user,
+      message: message.message,
+      createdAt: new Date().toISOString()
+    })).then(() => {
+      console.log('message created!');
       this.createForm.reset();
+      this.loadMessages();
     })
     .catch(e => {
-      console.log('error creating restaurant...', e);
+      console.log('error creating message...', e);
     });
   }
 }
+```
+
+## Deleting all messages
+
+One of the main advantages of working using Amplify DataStore is being able to run batch mutations without having to use a series of individual operations. 
+
+See below how we can use delete together with a predicate to remove all messages.
+
+```js
+DataStore.delete(Chatty, Predicates.ALL).then(() => {
+  console.log('messages deleted!');
+});
 ```
 
 ### GraphQL Subscriptions
@@ -492,74 +484,26 @@ Next, let's see how we can create a subscription to subscribe to changes of data
 
 To do so, we need to listen to the subscription, & update the state whenever a new piece of data comes in through the subscription.
 
+When the component is destroyed we will unsubscribe to avoid memory leaks.
+
 ```js
 @Component(...)
-export class HomeComponent implements OnInit {
+export class HomeComponent implements OnInit, OnDestroy {
+  subscription;
+
   ngOnInit() {
-    this.api.OnCreateRestaurantListener.subscribe(event => {
-      const newRestaurant = event.value.data.onCreateRestaurant;
-      this.restaurants = [newRestaurant, ...this.restaurants];
+    this.subscription = DataStore.observe<Chatty>(Chatty).subscribe(msg => {
+      console.log(msg.model, msg.opType, msg.element);
+      this.loadMessages();
     });
-```
+  }
 
-
-
-You can create multiple environments for your application in which to create & test out new features without affecting the main environment which you are working on.
-
-When you create a new environment from an existing environment, you are given a copy of the entire backend application stack from the original project. When you make changes in the new environment, you are then able to test these new changes in the new environment & merge only the changes that have been made since the new environment was created back into the original environment.
-
-Let's take a look at how to create a new environment. In this new environment, we'll re-configure the GraphQL Schema to have another field for the pet owner.
-
-First, we'll initialize a new environment using `amplify init`:
-
-```sh
-amplify init
-```
-
-- Do you want to use an existing environment? __N__
-- Enter a name for the environment: __apiupdate__
-- Do you want to use an AWS profile? __Y__
-- __amplify-workshop-user__
-
-Once the new environment is initialized, we should be able to see some information about our environment setup by running:
-
-```sh
-amplify env list
-
-| Environments |
-| ------------ |
-| dev          |
-| *apiupdate   |
-```
-
-Now we can update the GraphQL Schema in `amplify/backend/api/RestaurantAPI/schema.graphql` to the following (adding the owner field):
-
-```graphql
-type Restaurant @model {
-  ...
-  owner: String
+  ngOnDestroy() {
+    if (!this.subscription) return;
+    this.subscription.unsubscribe();
+  }
 }
 ```
-
-Now, we can create this new stack by running `amplify push`:
-
-```sh
-amplify push
-```
-
-After we test it out, we can now merge it into our original dev environment:
-
-```sh
-amplify env checkout dev
-
-amplify status
-
-amplify push
-```
-
-- Do you want to update code for your updated GraphQL API? __Y__
-- Do you want to generate GraphQL statements? __Y__
-
 
 ## Deploying via the Amplify Console
 
@@ -590,27 +534,6 @@ In the next screen, we'll create a new role & use this role to allow the Amplify
 Finally, we can click __Save and Deploy__ to deploy our application!
 
 Now, we can push updates to Master to update our application.
-
-## Run locally with the Amplify CLI
-
-1. Install and configure the Amplify CLI
-
-```
-  npm install -g @aws-amplify/cli
-  amplify configure
-```
-
-2. Install and configure the Amplify CLI
-
-```
-  amplify init --app https://github.com/gsans/ng-china-workshop-solution
-```
-  
->The init command clones the GitHub repo, initializes the CLI, creates a ‘sampledev’ environment in CLI, detects and adds categories, provisions the backend, pushes the changes to the cloud, and starts the app.
-
-3. Provisioning the frontend and backend
-
-Once the process is complete, the CLI will automatically open the app in your default browser.
 
 ## Removing Services
 
@@ -648,6 +571,7 @@ Solution: Make sure you are subscribed to the free plan. [Subscribe](https://por
 > Message: TypeError: fsevents is not a constructor
 
 Solution: `npm audit fix --force`
+
 
 > Message: Cannot read property 'viewContainerRef' of undefined at AuthenticatorComponent...
 
