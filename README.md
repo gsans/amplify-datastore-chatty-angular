@@ -366,8 +366,7 @@ import { Chatty } from "./models";
 
 await DataStore.save(new Chatty({
   user: "amplify-user",
-  message: "Hi everyone!",
-  createdAt: new Date().toISOString()
+  message: "Hi everyone!"
 }))
 ```
 
