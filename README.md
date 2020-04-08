@@ -578,6 +578,6 @@ Solution: `npm audit fix --force`
 
 > Message: Cannot read property 'viewContainerRef' of undefined at AuthenticatorComponent...
 
-Solution: (#4681)[https://github.com/aws-amplify/amplify-js/issues/4681]
+Solution: [#4681](https://github.com/aws-amplify/amplify-js/issues/4681)
 
 Replace package an occurrences of `aws-amplify-angular` with `@flowaccount/aws-amplify-angular`.
