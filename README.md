@@ -444,7 +444,7 @@ export class HomeComponent implements OnInit {
     })
   }
 
-  async ngOnInit() {
+  ngOnInit() {
     this.createForm = this.fb.group({
       'message': ['', Validators.required],
     });
