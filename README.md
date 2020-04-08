@@ -401,6 +401,10 @@ import { Chatty } from "../../models";
 @Component({
   template: `
     <div>
+      <form [formGroup]="createForm" (ngSubmit)="onCreate(createForm.value)">
+        <input type="text" formControlName="message" placeholder="Enter your message...">
+        <button type="submit">Send</button>
+      </form>
       <div *ngFor="let message of messages">
         <div>{{ message.user }} - {{ moment(message.createdAt).format('YYYY-MM-DD HH:mm:ss')}})</div>
         <div>{{ message.message }}</div>
