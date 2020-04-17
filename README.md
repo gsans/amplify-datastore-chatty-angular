@@ -67,7 +67,7 @@ Add the following code, to the top of `src/polyfills.ts`. This is a requirement 
 Let's now install the AWS Amplify API & AWS Amplify Angular library:
 
 ```bash
-npm install --save aws-amplify aws-amplify-angular
+npm install --save aws-amplify aws-amplify-angular moment
 ```
 > If you have issues related to EACCESS try using sudo: `sudo npm <command>`.
 
@@ -457,8 +457,7 @@ export class HomeComponent implements OnInit {
 
     DataStore.save(new Chatty({
       user: this.user,
-      message: message.message,
-      createdAt: new Date().toISOString()
+      message: message.message
     })).then(() => {
       console.log('message created!');
       this.createForm.reset();
