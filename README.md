@@ -368,7 +368,8 @@ import { Chatty } from "./models";
 
 await DataStore.save(new Chatty({
   user: "amplify-user",
-  message: "Hi everyone!"
+  message: "Hi everyone!",
+  createdAt: new Date().toISOString()
 }))
 ```
 
@@ -457,7 +458,8 @@ export class HomeComponent implements OnInit {
 
     DataStore.save(new Chatty({
       user: this.user,
-      message: message.message
+      message: message.message,
+      createdAt: new Date().toISOString()
     })).then(() => {
       console.log('message created!');
       this.createForm.reset();
