@@ -15,8 +15,8 @@ In this workshop we'll learn how to use Amplify DataStore to create `Chatty` a s
 
 ## Pre-requisites
 
-- Node: `13.12.0`. Visit [Node](https://nodejs.org/en/download/current/)
-- npm: `6.14.4`. Packaged with Node otherwise run upgrade
+- Node: `14.11.0`. Visit [Node](https://nodejs.org/en/download/current/)
+- npm: `6.14.8`. Packaged with Node otherwise run upgrade
 
 ```bash
 npm install -g npm
@@ -56,7 +56,6 @@ Add the following code, to the top of `src/polyfills.ts`. This is a requirement 
 
 ```js
 (window as any).global = window;
-
 (window as any).process = {
   env: { DEBUG: undefined }
 };
@@ -67,7 +66,7 @@ Add the following code, to the top of `src/polyfills.ts`. This is a requirement 
 Let's now install the AWS Amplify API & AWS Amplify Angular library:
 
 ```bash
-npm install --save aws-amplify aws-amplify-angular moment
+npm install --save aws-amplify @aws-amplify/ui-angular moment
 ```
 > If you have issues related to EACCESS try using sudo: `sudo npm <command>`.
 
@@ -78,7 +77,6 @@ Next, we'll install the AWS Amplify CLI:
 ```bash
 npm install -g @aws-amplify/cli
 ```
-> If you have issues related to fsevents with npm install. Try: `npm audit fix --force`.
 
 Now we need to configure the CLI with our credentials:
 
@@ -105,7 +103,7 @@ Here we'll walk through the `amplify configure` setup. Once you've signed in to 
 amplify init
 ```
 
-- Enter a name for the project: __amplify-datastore__
+- Enter a name for the project: __amplifydatastore__
 - Enter a name for the environment: __dev__
 - Choose your default editor: __Visual Studio Code__   
 - Please choose the type of app that you're building __javascript__   
@@ -141,13 +139,8 @@ amplify add auth
 
 > When prompted choose 
 - Do you want to use default authentication and security configuration?: __Default configuration__
-- How do you want users to be able to sign in when using your Cognito User Pool?: __Username__
-- Do you want to configure advanced settings? __Yes, I want to make some additional changes.__
-- What attributes are required for signing up? (Press &lt;space&gt; to select, &lt;a&gt; to 
-toggle all, &lt;i&gt; to invert selection): __Email__
-- Do you want to enable any of the following capabilities? (Press &lt;space&gt; to select, &lt;a&gt; to toggle all, &lt;i&gt; to invert selection): __None__
-
-> To select none just press `Enter` in the last option.
+- How do you want users to be able to sign in?: __Username__
+- Do you want to configure advanced settings? __No, I am done__
 
 Now, we'll run the push command and the cloud resources will be created in our AWS account.
 
@@ -179,9 +172,9 @@ The first thing we need to do is to configure our Angular application to be awar
 To configure the app, open __main.ts__ and add the following code below the last import:
 
 ```js
-import Auth from '@aws-amplify/auth';
-import amplify from './aws-exports';
-Auth.configure(amplify);
+import Amplify from "aws-amplify";
+import aws_exports from "./aws-exports";
+Amplify.configure(aws_exports);
 ```
 
 Now, our app is ready to start using our AWS services.
@@ -191,7 +184,7 @@ Now, our app is ready to start using our AWS services.
 Add the Amplify Module and Service to `src/app/app.module.ts`:
 
 ```js
-import { AmplifyAngularModule, AmplifyService } from 'aws-amplify-angular';
+import { AmplifyUIAngularModule } from '@aws-amplify/ui-angular';
 
 @NgModule({
   declarations: [
@@ -199,39 +192,26 @@ import { AmplifyAngularModule, AmplifyService } from 'aws-amplify-angular';
   ],
   imports: [
     BrowserModule,
-    AmplifyAngularModule
-  ],
-  providers: [
-    AmplifyService
+    AmplifyUIAngularModule
   ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
 ```
 
-### Using Amplify Service
-
-The `AmplifyService` provides access to AWS Amplify core categories via Dependency Injection: auth, analytics, storage, api, cache, pubsub; and authentication state via Observables.
-
 ### Using the Authenticator Component
 
 AWS Amplify provides UI components that you can use in your App. Let's add these components to the project
 
-```bash
-npm i --save @aws-amplify/ui
-```
-
-Also include these imports to the top of `styles.css`
-
-```css
-@import "~@aws-amplify/ui/src/Theme.css";
-@import "~@aws-amplify/ui/src/Angular.css";
-```
-
 In order to use the Authenticator Component replace all content in __src/app.component.html__ with:
 
 ```html
-<amplify-authenticator></amplify-authenticator>
+<amplify-authenticator>
+  <div>
+    Hey, {{user.username}}!
+    <amplify-sign-out></amplify-sign-out>
+  </div>
+</amplify-authenticator>
 ```
 
 Now, we can run the app and see that an Authentication flow has been added in front of our App component. This flow gives users the ability to sign up & sign in.
@@ -250,7 +230,7 @@ We can access the user's info now that they are signed in by calling `currentAut
 
 ```js
 import { Component } from '@angular/core';
-import { AmplifyService } from 'aws-amplify-angular';
+
 
 @Component({
   selector: 'app-root',
