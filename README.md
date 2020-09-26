@@ -63,7 +63,7 @@ Add the following code, to the top of `src/polyfills.ts`. This is a requirement 
 
 ## Installing the CLI & Initializing a new AWS Amplify Project
 
-Let's now install the AWS Amplify API & AWS Amplify Angular library:
+Let's now install the AWS Amplify & AWS Amplify Angular libraries:
 
 ```bash
 npm install --save aws-amplify @aws-amplify/ui-angular moment
@@ -88,6 +88,9 @@ amplify configure
 
 Here we'll walk through the `amplify configure` setup. Once you've signed in to the AWS console, continue:
 - Specify the AWS Region: __eu-west-2 (London)__
+
+> Find out the best AWS Region to host your app (lower latency is best): [AWS latency test](https://ping.psa.fun), [CloudPing.info](https://www.cloudping.info).
+
 - Specify the username of the new IAM user: __amplify-datastore__
 > In the AWS Console, click __Next: Permissions__, __Next: Tags__, __Next: Review__, & __Create User__ to create the new IAM user. Then, return to the command line & press Enter.
 - Enter the access key of the newly created user:   
@@ -208,7 +211,7 @@ In order to use the Authenticator Component replace all content in __src/app.com
 ```html
 <amplify-authenticator>
   <div>
-    Hey, {{user.username}}!
+    Chatty
     <amplify-sign-out></amplify-sign-out>
   </div>
 </amplify-authenticator>
@@ -229,17 +232,48 @@ amplify console auth
 We can access the user's info now that they are signed in by calling `currentAuthenticatedUser()` which returns a Promise.
 
 ```js
-import { Component } from '@angular/core';
-
-
-@Component({
-  selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css']
-})
+import Auth from '@aws-amplify/auth';
+@Component(...)
 export class AppComponent {
-  constructor(public amplify: AmplifyService) {
-    amplify.auth().currentAuthenticatedUser().then(console.log)
+  constructor() {
+    Auth.currentAuthenticatedUser().then(console.log)
+  }
+}
+```
+### Managing authentication states
+The `Authenticator` Component goes through different states as the user interacts with the authentication flow. Let's see a more advanced example of showing a welcome message to the user once is logged in:
+Replace the content of __src/app/app.component.html__ with:
+```html
+<amplify-authenticator>
+  Hey {{user.username}}
+  <amplify-sign-out></amplify-sign-out>
+</amplify-authenticator>
+```
+In our component make the following changes
+```js
+import { Component, ChangeDetectorRef, OnInit } from '@angular/core';
+import { onAuthUIStateChange, AuthState } from '@aws-amplify/ui-components';
+import Auth from '@aws-amplify/auth';
+
+@Component(...)
+export class AppComponent implements OnInit, OnDestroy {
+  user;
+  listener;
+
+  constructor(private ref: ChangeDetectorRef) {
+    Auth.currentAuthenticatedUser().then(console.log)    
+  }
+
+  ngOnInit() {
+    this.listener = onAuthUIStateChange((state, user) => {
+      if (state === AuthState.SignedIn) {
+        this.user = user;
+        this.ref.detectChanges();
+      }
+    })
+  }
+  ngOnDestroy() {
+    this.listener();
   }
 }
 ```
