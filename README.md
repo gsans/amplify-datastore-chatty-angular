@@ -258,14 +258,14 @@ import Auth from '@aws-amplify/auth';
 @Component(...)
 export class AppComponent implements OnInit, OnDestroy {
   user;
-  listener;
+  unregister;
 
   constructor(private ref: ChangeDetectorRef) {
     Auth.currentAuthenticatedUser().then(console.log)    
   }
 
   ngOnInit() {
-    this.listener = onAuthUIStateChange((state, user) => {
+    this.unregister = onAuthUIStateChange((state, user) => {
       if (state === AuthState.SignedIn) {
         this.user = user;
         this.ref.detectChanges();
@@ -273,7 +273,7 @@ export class AppComponent implements OnInit, OnDestroy {
     })
   }
   ngOnDestroy() {
-    this.listener();
+    this.unregister();
   }
 }
 ```
