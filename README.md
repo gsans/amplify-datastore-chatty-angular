@@ -245,7 +245,7 @@ The `Authenticator` Component goes through different states as the user interact
 Replace the content of __src/app/app.component.html__ with:
 ```html
 <amplify-authenticator>
-  Hey {{user.username}}
+  Hey {{user?.username}}
   <amplify-sign-out></amplify-sign-out>
 </amplify-authenticator>
 ```
@@ -412,7 +412,8 @@ Now, let's look at how we can create the UI to create and display messages for o
 
 ```js
 import { DataStore, Predicates } from "@aws-amplify/datastore";
-import { Chatty } from "../../models";
+import { Chatty } from "../models";
+import * as moment from "moment";
 
 @Component({
   template: `
@@ -429,6 +430,7 @@ import { Chatty } from "../../models";
 })
 export class AppComponent implements OnInit {
   messages: Array<Chatty>;
+  moment = moment;
 
   ngOnInit() {
     this.loadMessages();
@@ -454,16 +456,20 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 export class HomeComponent implements OnInit {
   public createForm: FormGroup;
 
-  constructor(private fb: FormBuilder) {
-    Auth.currentAuthenticatedUser().then(cognitoUser => {
-      this.user = cognitoUser.username
-    })
-  }
-
-  ngOnInit() {
+  constructor(private fb: FormBuilder, private ref: ChangeDetectorRef) {
+    Auth.currentAuthenticatedUser().then(console.log);
     this.createForm = this.fb.group({
       'message': ['', Validators.required],
     });
+  }
+
+  ngOnInit() {
+    this.unregister = onAuthUIStateChange((state, user) => {
+      if (state === AuthState.SignedIn) {
+        this.user = user;
+        this.ref.detectChanges();
+      }
+    })
     this.loadMessages();
   } 
   
@@ -471,7 +477,7 @@ export class HomeComponent implements OnInit {
     if ( message.message=="" ) return;
 
     DataStore.save(new Chatty({
-      user: this.user,
+      user: this.user.username,
       message: message.message,
       createdAt: new Date().toISOString()
     })).then(() => {
