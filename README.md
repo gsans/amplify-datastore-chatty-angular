@@ -1,6 +1,6 @@
 # Cloud-enabled Amplify DataStore workshop using Angular
 
-In this workshop we'll learn how to use Amplify DataStore to create `Chatty` a single room realtime multi-user chat app using Angular 10 & [AWS Amplify](https://aws-amplify.github.io/).
+In this workshop we'll learn how to use Amplify DataStore to create `Chatty` a single room realtime multi-user chat app using Angular 11 & [AWS Amplify](https://aws-amplify.github.io/).
 
 ![](./header.png)
 
@@ -15,8 +15,8 @@ In this workshop we'll learn how to use Amplify DataStore to create `Chatty` a s
 
 ## Pre-requisites
 
-- Node: `14.11.0`. Visit [Node](https://nodejs.org/en/download/current/)
-- npm: `6.14.8`. Packaged with Node otherwise run upgrade
+- Node: `15.2.1`. Visit [Node](https://nodejs.org/en/download/current/)
+- npm: `7.0.8`. Packaged with Node otherwise run upgrade
 
 ```bash
 npm install -g npm
