@@ -499,9 +499,13 @@ One of the main advantages of working using Amplify DataStore is being able to r
 See below how we can use delete together with a predicate to remove all messages.
 
 ```js
-DataStore.delete(Chatty, Predicates.ALL).then(() => {
-  console.log('messages deleted!');
-});
+public async onDeleteAll() {
+  await DataStore.delete<Chatty>(Chatty, Predicates.ALL)
+    .then(() => this.loadMessages())
+    .catch(e => {
+      console.log('error deleting all messages...', e);
+    });
+}
 ```
 
 ### GraphQL Subscriptions
